@@ -25,12 +25,12 @@ using namespace std;
 using namespace boost::asio::ip;
 using namespace boost::asio::ssl;
 
-ClientSession::ClientSession(const Config &config, boost::asio::io_service &io_service, context &ssl_context) :
-    Session(config, io_service),
+ClientSession::ClientSession(const Config &config, boost::asio::io_context &io_context, context &ssl_context) :
+    Session(config, io_context),
     status(HANDSHAKE),
     first_packet_recv(false),
-    in_socket(io_service),
-    out_socket(io_service, ssl_context) {}
+    in_socket(io_context),
+    out_socket(io_context, ssl_context) {}
 
 tcp::socket& ClientSession::accept_socket() {
     return in_socket;
@@ -70,7 +70,8 @@ void ClientSession::in_async_read() {
 
 void ClientSession::in_async_write(const string &data) {
     auto self = shared_from_this();
-    boost::asio::async_write(in_socket, boost::asio::buffer(data), [this, self](const boost::system::error_code error, size_t) {
+    auto data_copy = make_shared<string>(data);
+    boost::asio::async_write(in_socket, boost::asio::buffer(*data_copy), [this, self, data_copy](const boost::system::error_code error, size_t) {
         if (error) {
             destroy();
             return;
@@ -92,7 +93,8 @@ void ClientSession::out_async_read() {
 
 void ClientSession::out_async_write(const string &data) {
     auto self = shared_from_this();
-    boost::asio::async_write(out_socket, boost::asio::buffer(data), [this, self](const boost::system::error_code error, size_t) {
+    auto data_copy = make_shared<string>(data);
+    boost::asio::async_write(out_socket, boost::asio::buffer(*data_copy), [this, self, data_copy](const boost::system::error_code error, size_t) {
         if (error) {
             destroy();
             return;
@@ -114,7 +116,8 @@ void ClientSession::udp_async_read() {
 
 void ClientSession::udp_async_write(const string &data, const udp::endpoint &endpoint) {
     auto self = shared_from_this();
-    udp_socket.async_send_to(boost::asio::buffer(data), endpoint, [this, self](const boost::system::error_code error, size_t) {
+    auto data_copy = make_shared<string>(data);
+    udp_socket.async_send_to(boost::asio::buffer(*data_copy), endpoint, [this, self, data_copy](const boost::system::error_code error, size_t) {
         if (error) {
             destroy();
             return;
@@ -220,14 +223,14 @@ void ClientSession::in_sent() {
             } else {
                 first_packet_recv = true;
             }
-            tcp::resolver::query query(config.remote_addr, to_string(config.remote_port));
             auto self = shared_from_this();
-            resolver.async_resolve(query, [this, self](const boost::system::error_code error, tcp::resolver::iterator iterator) {
+            resolver.async_resolve(config.remote_addr, to_string(config.remote_port), [this, self](const boost::system::error_code error, tcp::resolver::results_type results) {
                 if (error) {
                     Log::log_with_endpoint(in_endpoint, "cannot resolve remote server hostname " + config.remote_addr + ": " + error.message(), Log::ERROR);
                     destroy();
                     return;
                 }
+                auto iterator = results.begin();
                 boost::system::error_code ec;
                 out_socket.next_layer().open(iterator->endpoint().protocol(), ec);
                 if (ec) {
