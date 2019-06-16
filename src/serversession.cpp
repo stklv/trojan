@@ -148,6 +148,9 @@ void ServerSession::in_recv(const string &data) {
             } else {
                 Log::log_with_endpoint(in_endpoint, "authenticated as " + password_iterator->second, Log::INFO);
             }
+            if (!valid) {
+                Log::log_with_endpoint(in_endpoint, "valid trojan request structure but possibly incorrect password (" + req.password + ')', Log::WARN);
+            }
         }
         string query_addr = valid ? req.address.address : config.remote_addr;
         string query_port = to_string(valid ? req.address.port : config.remote_port);
@@ -330,12 +333,20 @@ void ServerSession::destroy() {
         udp_socket.close(ec);
     }
     if (in_socket.next_layer().is_open()) {
+        auto self = shared_from_this();
+        auto ssl_shutdown_cb = [this, self](const boost::system::error_code error) {
+            if (error == boost::asio::error::operation_aborted) {
+                return;
+            }
+            boost::system::error_code ec;
+            ssl_shutdown_timer.cancel();
+            in_socket.next_layer().cancel(ec);
+            in_socket.next_layer().shutdown(tcp::socket::shutdown_both, ec);
+            in_socket.next_layer().close(ec);
+        };
         in_socket.next_layer().cancel(ec);
-        // only do unidirectional shutdown and don't wait for other side's close_notify
-        // a.k.a. call SSL_shutdown() once and discard its return value
-        ::SSL_set_shutdown(in_socket.native_handle(), SSL_RECEIVED_SHUTDOWN);
-        in_socket.shutdown(ec);
-        in_socket.next_layer().shutdown(tcp::socket::shutdown_both, ec);
-        in_socket.next_layer().close(ec);
+        in_socket.async_shutdown(ssl_shutdown_cb);
+        ssl_shutdown_timer.expires_after(chrono::seconds(SSL_SHUTDOWN_TIMEOUT));
+        ssl_shutdown_timer.async_wait(ssl_shutdown_cb);
     }
 }
