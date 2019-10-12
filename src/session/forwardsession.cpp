@@ -18,8 +18,8 @@
  */
 
 #include "forwardsession.h"
-#include "trojanrequest.h"
-#include "sslsession.h"
+#include "proto/trojanrequest.h"
+#include "ssl/sslsession.h"
 using namespace std;
 using namespace boost::asio::ip;
 using namespace boost::asio::ssl;
@@ -64,6 +64,7 @@ void ForwardSession::start() {
             return;
         }
         auto iterator = results.begin();
+        Log::log_with_endpoint(in_endpoint, config.remote_addr + " is resolved to " + iterator->endpoint().address().to_string(), Log::ALL);
         boost::system::error_code ec;
         out_socket.next_layer().open(iterator->endpoint().protocol(), ec);
         if (ec) {

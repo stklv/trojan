@@ -12,7 +12,7 @@ stages:
     - script: |
         set -euo pipefail
         echo 'target_link_libraries(trojan dl)' >> CMakeLists.txt
-        cmake -DMYSQL_INCLUDE_DIR=/usr/local/include/mariadb -DMYSQL_LIBRARY=/usr/local/lib/mariadb/libmysqlclient.a -DDEFAULT_CONFIG=config.json -DFORCE_TCP_FASTOPEN=ON .
+        cmake -DMYSQL_INCLUDE_DIR=/usr/local/include/mariadb -DMYSQL_LIBRARY=/usr/local/lib/mariadb/libmysqlclient.a -DDEFAULT_CONFIG=config.json -DFORCE_TCP_FASTOPEN=ON -DBoost_USE_STATIC_LIBS=ON .
         make
         strip -s trojan
     - publish: $(System.DefaultWorkingDirectory)/trojan
@@ -37,8 +37,8 @@ stages:
     steps:
     - bash: |
         set -euo pipefail
-        curl -LO https://slproweb.com/download/Win64OpenSSL-1_1_1c.exe
-        powershell ".\\Win64OpenSSL-1_1_1c.exe /silent /sp- /suppressmsgboxes /DIR='C:\\Program Files\\OpenSSL-Win64'"
+        curl -LO https://slproweb.com/download/Win64OpenSSL-1_1_1d.exe
+        powershell ".\\Win64OpenSSL-1_1_1d.exe /silent /sp- /suppressmsgboxes /DIR='C:\\Program Files\\OpenSSL-Win64'"
         cmake -DBoost_USE_STATIC_LIBS=ON -DOPENSSL_ROOT_DIR='C:/Program Files/OpenSSL-Win64' -DOPENSSL_USE_STATIC_LIBS=ON -DENABLE_MYSQL=OFF .
         cmake --build . --config Release
     - publish: $(System.DefaultWorkingDirectory)/Release/trojan.exe
@@ -103,7 +103,7 @@ stages:
         cp "$BINARY" trojan/trojan
         cp -r examples CONTRIBUTORS.md LICENSE README.md trojan
         cp examples/client.json-example trojan/config.json
-        rm trojan/examples/trojan.service-example
+        rm trojan/examples/nat.json-example trojan/examples/trojan.service-example
         cat > trojan/start.command <<EOF
         #!/bin/sh
 
@@ -133,7 +133,7 @@ stages:
         cp "$BINARY" trojan/trojan.exe
         cp -r examples CONTRIBUTORS.md LICENSE README.md trojan
         cp examples/client.json-example trojan/config.json
-        rm trojan/examples/trojan.service-example
+        rm trojan/examples/nat.json-example trojan/examples/trojan.service-example
         7z a -mx=9 trojan-win.zip trojan
       env:
         PIPELINE_WORKSPACE: $(Pipeline.Workspace)

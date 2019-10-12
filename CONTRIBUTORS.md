@@ -4,14 +4,16 @@
     - Add Debian build instructions in the documentation.
 - [felixonmars](https://github.com/felixonmars)
     - Fix incorrect systemd service path in the documentation.
+- [ffftwo](https://github.com/ffftwo)
+    - Throw an exception when `run_type` is wrong.
 - [GreaterFire](https://github.com/GreaterFire)
     - Author of this project.
+- [JonathanHouten](https://github.com/JonathanHouten)
+    - Fix a parameter type error in the `CertOpenSystemStore` call.
 - [KCCat](https://github.com/KCCat)
     - Fix an ambiguity in the documentation.
 - [klzgrad](https://github.com/klzgrad)
     - Add Linux smoke test.
-- [UzminTid](https://github.com/UzminTid)
-    - Fix type error in MinGW.
 - [WeidiDeng](https://github.com/WeidiDeng)
     - Fix incorrect Debian dependency in the documentation.
 - [wongsyrone](https://github.com/wongsyrone)
@@ -24,3 +26,4 @@
     - Refer to `basic_stream_socket` instead of `basic_socket` in SSL sockets.
     - Cancel async tasks when stopping the service.
     - Fix fd leak.
+    - Print OpenSSL compile-time version and build flags.

@@ -17,27 +17,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _SERVERSESSION_H_
-#define _SERVERSESSION_H_
+#ifndef _NATSESSION_H_
+#define _NATSESSION_H_
 
 #include "session.h"
 #include <boost/asio/ssl.hpp>
-#include "authenticator.h"
 
-class ServerSession : public Session {
+class NATSession : public Session {
 private:
     enum Status {
-        HANDSHAKE,
+        CONNECT,
         FORWARD,
-        UDP_FORWARD,
         DESTROY
     } status;
-    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>in_socket;
-    boost::asio::ip::tcp::socket out_socket;
-    boost::asio::ip::udp::resolver udp_resolver;
-    Authenticator *auth;
-    std::string auth_password;
-    const std::string &plain_http_response;
+    bool first_packet_recv;
+    boost::asio::ip::tcp::socket in_socket;
+    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>out_socket;
     void destroy();
     void in_async_read();
     void in_async_write(const std::string &data);
@@ -47,14 +42,11 @@ private:
     void out_async_write(const std::string &data);
     void out_recv(const std::string &data);
     void out_sent();
-    void udp_async_read();
-    void udp_async_write(const std::string &data, const boost::asio::ip::udp::endpoint &endpoint);
-    void udp_recv(const std::string &data, const boost::asio::ip::udp::endpoint &endpoint);
-    void udp_sent();
+    std::pair<std::string, uint16_t> get_target_endpoint();
 public:
-    ServerSession(const Config &config, boost::asio::io_context &io_context, boost::asio::ssl::context &ssl_context, Authenticator *auth, const std::string &plain_http_response);
+    NATSession(const Config &config, boost::asio::io_context &io_context, boost::asio::ssl::context &ssl_context);
     boost::asio::ip::tcp::socket& accept_socket();
     void start();
 };
 
-#endif // _SERVERSESSION_H_
+#endif // _NATSESSION_H_

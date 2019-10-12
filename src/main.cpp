@@ -26,8 +26,8 @@
 #ifdef ENABLE_MYSQL
 #include <mysql.h>
 #endif // ENABLE_MYSQL
-#include "service.h"
-#include "version.h"
+#include "core/service.h"
+#include "core/version.h"
 using namespace std;
 using namespace boost::asio;
 namespace po = boost::program_options;
@@ -88,7 +88,7 @@ int main(int argc, const char *argv[]) {
             exit(EXIT_SUCCESS);
         }
         if (vm.count("version")) {
-            Log::log(string("Boost ") + BOOST_LIB_VERSION + ", " + OPENSSL_VERSION_TEXT, Log::FATAL);
+            Log::log(string("Boost ") + BOOST_LIB_VERSION + ", " + OpenSSL_version(OPENSSL_VERSION), Log::FATAL);
 #ifdef ENABLE_MYSQL
             Log::log(string(" [Enabled] MySQL Support (") + mysql_get_client_info() + ')', Log::FATAL);
 #else // ENABLE_MYSQL
@@ -109,6 +109,16 @@ int main(int argc, const char *argv[]) {
 #else // ENABLE_SSL_KEYLOG
             Log::log("[Disabled] SSL KeyLog Support", Log::FATAL);
 #endif // ENABLE_SSL_KEYLOG
+#ifdef ENABLE_NAT
+            Log::log(" [Enabled] NAT Support", Log::FATAL);
+#else // ENABLE_NAT
+            Log::log("[Disabled] NAT Support", Log::FATAL);
+#endif // ENABLE_NAT
+            Log::log("OpenSSL Information", Log::FATAL);
+            if (OpenSSL_version_num() != OPENSSL_VERSION_NUMBER) {
+                Log::log(string("\tCompile-time Version: ") + OPENSSL_VERSION_TEXT, Log::FATAL);
+            }
+            Log::log(string("\tBuild Flags: ") + OpenSSL_version(OPENSSL_CFLAGS), Log::FATAL);
             exit(EXIT_SUCCESS);
         }
         if (vm.count("log")) {

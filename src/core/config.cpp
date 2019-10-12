@@ -1,7 +1,7 @@
 /*
  * This file is part of the trojan project.
  * Trojan is an unidentifiable mechanism that helps you bypass GFW.
- * Copyright (C) 2017-2019  GreaterFire
+ * Copyright (C) 2017-2019  GreaterFire, ffftwo
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,8 +45,12 @@ void Config::populate(const ptree &tree) {
         run_type = SERVER;
     } else if (rt == "forward") {
         run_type = FORWARD;
-    } else {
+    } else if (rt == "nat") {
+        run_type = NAT;
+    } else if (rt == "client") {
         run_type = CLIENT;
+    } else {
+        throw runtime_error("wrong run_type in config file");
     }
     local_addr = tree.get("local_addr", string());
     local_port = tree.get("local_port", uint16_t());
@@ -106,6 +110,7 @@ bool Config::sip003() {
             local_port = atoi(getenv("SS_REMOTE_PORT"));
             break;
         case CLIENT:
+        case NAT:
             throw runtime_error("SIP003 with wrong run_type");
             break;
         case FORWARD:
