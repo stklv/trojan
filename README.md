@@ -17,13 +17,9 @@ Installation guide on various platforms can be found in the [wiki](https://githu
 
 - [CMake](https://cmake.org/) >= 3.7.2
 - [Boost](http://www.boost.org/) >= 1.66.0
-- [OpenSSL](https://www.openssl.org/) >= 1.0.2
+- [OpenSSL](https://www.openssl.org/) >= 1.1.0
 - [libmysqlclient](https://dev.mysql.com/downloads/connector/c/)
 
 ## License
 
 [GPLv3](LICENSE)
-
-## Flag Counter
-
-[![Flag Counter](https://s04.flagcounter.com/countxl/svnh/bg_FFFFFF/txt_000000/border_CCCCCC/columns_5/maxflags_20/viewers_Trojan/labels_1/pageviews_1/flags_0/percent_0/)](https://info.flagcounter.com/svnh)
