@@ -1,7 +1,7 @@
 /*
  * This file is part of the trojan project.
  * Trojan is an unidentifiable mechanism that helps you bypass GFW.
- * Copyright (C) 2017-2019  GreaterFire
+ * Copyright (C) 2017-2020  The Trojan Authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ bool SOCKS5Address::parse(const string &data, size_t &address_len) {
                 // invalid domain len
                 break;
             }
-            if (data.length() > 1 + domain_len + 2) {
+            if (data.length() > (unsigned int)(1 + domain_len + 2)) {
                 address = data.substr(2, domain_len);
                 port = (uint8_t(data[domain_len + 2]) << 8) | uint8_t(data[domain_len + 3]);
                 address_len =  1 + 1 + domain_len + 2;

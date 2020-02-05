@@ -1,7 +1,7 @@
 /*
  * This file is part of the trojan project.
  * Trojan is an unidentifiable mechanism that helps you bypass GFW.
- * Copyright (C) 2017-2019  GreaterFire, wongsyrone, UzminTid
+ * Copyright (C) 2017-2020  The Trojan Authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ Service::Service(Config &config, bool test) :
 #ifdef ENABLE_REUSE_PORT
             socket_acceptor.set_option(reuse_port(true));
 #else  // ENABLE_REUSE_PORT
-            Log::log_with_date_time("TCP_REUSEPORT is not supported", Log::WARN);
+            Log::log_with_date_time("SO_REUSEPORT is not supported", Log::WARN);
 #endif // ENABLE_REUSE_PORT
         }
 
@@ -121,9 +121,6 @@ Service::Service(Config &config, bool test) :
         } else {
             ssl_context.use_tmp_dh_file(config.ssl.dhparam);
         }
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        SSL_CTX_set_ecdh_auto(native_context, 1);
-#endif
         if (config.mysql.enabled) {
 #ifdef ENABLE_MYSQL
             auth = new Authenticator(config);
@@ -173,7 +170,7 @@ Service::Service(Config &config, bool test) :
                         if (status == errSecItemNotFound) {
                             break;
                         }
-                        
+
                         if (status == noErr) {
                             void *_pCertData;
                             UInt32 _pCertLength;
@@ -187,7 +184,7 @@ Service::Service(Config &config, bool test) :
                                 if (cert == NULL) {
                                     continue;
                                 }
-   
+
                                 if (!X509_STORE_add_cert (store, cert)) {
                                     X509_free (cert);
                                     continue;
@@ -249,22 +246,18 @@ Service::Service(Config &config, bool test) :
         if (config.tcp.keep_alive) {
             socket_acceptor.set_option(boost::asio::socket_base::keep_alive(true));
         }
-#ifdef TCP_FASTOPEN
         if (config.tcp.fast_open) {
+#ifdef TCP_FASTOPEN
             using fastopen = boost::asio::detail::socket_option::integer<IPPROTO_TCP, TCP_FASTOPEN>;
             boost::system::error_code ec;
             socket_acceptor.set_option(fastopen(config.tcp.fast_open_qlen), ec);
-        }
 #else // TCP_FASTOPEN
-        if (config.tcp.fast_open) {
             Log::log_with_date_time("TCP_FASTOPEN is not supported", Log::WARN);
-        }
 #endif // TCP_FASTOPEN
 #ifndef TCP_FASTOPEN_CONNECT
-        if (config.tcp.fast_open) {
             Log::log_with_date_time("TCP_FASTOPEN_CONNECT is not supported", Log::WARN);
-        }
 #endif // TCP_FASTOPEN_CONNECT
+        }
     }
     if (Log::keylog) {
 #ifdef ENABLE_SSL_KEYLOG
